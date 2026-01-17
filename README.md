@@ -40,6 +40,16 @@ Works with Claude Code, GitHub Copilot, OpenCode, Cursor, and VS Code with Copil
 | [skill-crafting](skills/skill-crafting/) | Create, fix, validate skills + generate from session history | Creating skills, fixing issues, CSO compliance, session-to-skill conversion |
 | [ui-ux-design](skills/ui-ux-design/) | Create production-grade interfaces with strong UX foundations | Building functional, accessible, visually distinctive UI/UX |
 
+## Output Styles
+
+Customize Claude's response style via `/output-style`:
+
+| Style | Description |
+|-------|-------------|
+| socratic | Teaches through questions. Backs off when you ask for direct answers. |
+| speed-run | Max 3 sentences. Code first, explanations on request. |
+| pair-programmer | Thinks aloud, invites interruption. Best for complex problems. |
+
 ## Usage
 
 Once installed, skills activate automatically when relevant to your prompt:

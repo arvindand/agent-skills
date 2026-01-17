@@ -1,7 +1,7 @@
 {
   "name": "agent-skills",
   "version": "1.1.0",
-  "description": "Portable skills library: documentation lookup, GitHub operations, dependency intelligence, UI/UX patterns, and skill crafting",
+  "description": "Portable skills library with output styles: documentation lookup, GitHub operations, dependency intelligence, UI/UX patterns, and skill crafting",
   "author": {
     "name": "Arvind Menon",
     "url": "https://github.com/arvindand"
