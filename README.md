@@ -36,7 +36,7 @@ Works with Claude Code, GitHub Copilot, OpenCode, Cursor, and VS Code with Copil
 |-------|-------------|---------|
 | [context7](skills/context7/) | Library documentation lookup via Context7 REST API | Getting up-to-date docs for React, Next.js, Prisma, etc. |
 | [github-navigator](skills/github-navigator/) | GitHub operations via gh CLI with deep analysis mode | All GitHub operations + codebase analysis via cloning |
-| [maven-tools](skills/maven-tools/) | JVM dependency intelligence via [Maven Tools MCP server](https://github.com/arvindand/maven-tools-mcp) | Version checks, upgrade planning, CVE scanning, license compliance |
+| [maven-tools](skills/maven-tools/) | JVM dependency intelligence via [Maven Tools MCP server](https://github.com/arvindand/maven-tools-mcp) | Version checks, safer upgrade planning, JVM dependency bot replacement flows, CVE scanning, license compliance |
 | [skill-crafting](skills/skill-crafting/) | Create, fix, validate skills + generate from session history | Creating skills, fixing issues, CSO compliance, session-to-skill conversion |
 | [ui-ux-design](skills/ui-ux-design/) | Create production-grade interfaces with strong UX foundations | Building functional, accessible, visually distinctive UI/UX |
 
@@ -65,7 +65,7 @@ You: "Analyze the architecture of vercel/next.js"
 → github-navigator clones repo for deep codebase analysis
 
 You: "Should I upgrade Spring Boot from 2.7 to 3.2?"
-→ maven-tools analyzes versions, CVEs, breaking changes
+→ maven-tools analyzes versions, CVEs, same-major safe fallback paths, and documentation handoff
 
 You: "Build me a login form with dark mode"
 → ui-ux-design creates accessible component with proper states
@@ -149,6 +149,8 @@ Use MCP when:
 - No CLI exists and you can't easily wrap the API
 
 Skills and MCP can work together. You can write a skill that teaches the AI how to use your MCP servers effectively.
+
+The `maven-tools` skill is a good example of that hybrid model: the MCP server does the dependency intelligence work, and the skill keeps the orchestration patterns lean, portable, and easier to evolve.
 
 ## License
 

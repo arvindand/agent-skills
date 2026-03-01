@@ -1,6 +1,6 @@
 # GitHub Navigator References
 
-Detailed examples, installation, and troubleshooting for gh CLI.
+Optional examples, installation notes, and troubleshooting for lower-frequency `gh` tasks.
 
 ## Complete Examples
 

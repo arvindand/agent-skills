@@ -114,11 +114,13 @@ description: "[What it does]. Use when [triggers]. Use when [more triggers]."
 
 | Rule | Why |
 |------|-----|
-| Start with "Use when..." | Focuses on triggers |
+| Include "Use when..." clauses | Focuses on triggers |
 | Include exact user phrases | Matches natural language |
 | Write in third person | Injected into system prompt |
 | Never summarize workflow | Causes Claude to skip reading skill |
 | Keep under 500 chars | Loaded into every conversation |
+
+A short "what it does" prefix before the trigger clauses is fine when it improves clarity.
 
 ### Good Examples
 
