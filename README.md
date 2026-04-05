@@ -49,6 +49,7 @@ Customize Claude's response style via `/output-style`:
 | [socratic](output-styles/socratic.md) | Teaches through questions. Backs off when you ask for direct answers. |
 | [speed-run](output-styles/speed-run.md) | Max 3 sentences. Code first, explanations on request. |
 | [pair-programmer](output-styles/pair-programmer.md) | Thinks aloud, invites interruption. Best for complex problems. |
+| [deep-focus](output-styles/deep-focus.md) | Calm, methodical. Accuracy over speed. Best for hard problems. |
 
 ## Usage
 
