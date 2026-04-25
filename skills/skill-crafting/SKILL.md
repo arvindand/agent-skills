@@ -8,7 +8,7 @@ hooks:
     - matcher: "Bash"
       hooks:
         - type: command
-          command: "python3 scripts/format-results.py"
+          command: "python3 \"${CLAUDE_SKILL_DIR}/scripts/format-results.py\""
   Stop:
     - hooks:
         - type: prompt

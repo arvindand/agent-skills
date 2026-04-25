@@ -461,12 +461,12 @@ hooks:
     - matcher: "Bash"
       hooks:
         - type: command
-          command: "python3 scripts/validate-input.py"
+          command: "python3 \"${CLAUDE_SKILL_DIR}/scripts/validate-input.py\""
   PostToolUse:
     - matcher: "Bash"
       hooks:
         - type: command
-          command: "python3 scripts/post-process.py"
+          command: "python3 \"${CLAUDE_SKILL_DIR}/scripts/post-process.py\""
 ---
 ```
 

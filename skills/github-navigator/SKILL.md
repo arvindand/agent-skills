@@ -9,7 +9,7 @@ hooks:
     - matcher: "Bash"
       hooks:
         - type: command
-          command: "python3 scripts/validate-gh-output.py"
+          command: "python3 \"${CLAUDE_SKILL_DIR}/scripts/validate-gh-output.py\""
 ---
 
 # GitHub Navigator
