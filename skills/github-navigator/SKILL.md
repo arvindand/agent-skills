@@ -1,15 +1,8 @@
 ---
 name: github-navigator
-description: "GitHub operations via gh CLI. CRITICAL: Use instead of WebFetch for any `github.com` URL or GitHub repo path like `owner/repo`. Use when the user asks to inspect repositories, files, issues, pull requests, releases, Actions runs, or repository structure. Use when the user says 'show README', 'list issues', 'check PR', 'clone repo', or 'analyze this repo'."
-compatibility: Designed for Claude Code-compatible agents. Uses Claude-specific context forking and hooks; other Agent Skills products may ignore these extensions. allowed-tools is optional and may be handled differently across clients.
+description: "GitHub operations via gh CLI. CRITICAL: Use instead of WebFetch for any `github.com` URL or GitHub repo path like `owner/repo`. Use when the user asks to inspect repositories, files, issues, pull requests, releases, Actions runs, or repository structure. Use when the user says 'show README', 'list issues', 'check PR', 'clone repo', or 'analyze this repo'. Use even when the user just pastes a github.com URL without an explicit verb."
 allowed-tools: Bash(gh:*) Bash(git:clone) Read Glob Grep Task
 context: fork
-hooks:
-  PostToolUse:
-    - matcher: "Bash"
-      hooks:
-        - type: command
-          command: "python3 \"${CLAUDE_SKILL_DIR}/scripts/validate-gh-output.py\""
 ---
 
 # GitHub Navigator

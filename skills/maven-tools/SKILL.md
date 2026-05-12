@@ -1,6 +1,6 @@
 ---
 name: maven-tools
-description: "JVM dependency intelligence via Maven Tools MCP server. Use when the user asks about Maven or Gradle dependencies, JVM library versions, safe upgrades, CVEs, license risks, release history, or project dependency health. Use when reviewing `pom.xml`, `build.gradle`, `build.gradle.kts`, or Maven coordinates. Use when the user says 'check my dependencies', 'should I upgrade X', or 'is this version safe'."
+description: "JVM dependency intelligence via Maven Tools MCP server. Use when the user asks about Maven or Gradle dependencies, JVM library versions, safe upgrades, CVEs, license risks, release history, or project dependency health. Use when reviewing `pom.xml`, `build.gradle`, `build.gradle.kts`, or Maven coordinates. Use when the user says 'check my dependencies', 'should I upgrade X', or 'is this version safe'. Use even when the user just pastes a `groupId:artifactId` coordinate without a verb."
 allowed-tools: mcp__maven-tools__* mcp__context7__* WebSearch WebFetch
 ---
 

@@ -1,7 +1,6 @@
 ---
 name: ui-ux-design
-description: "Create production-grade frontend interfaces with strong UX and visual craft. Use when building web components, pages, dashboards, forms, landing pages, or any UI. Use when user says 'build a form', 'create a dashboard', 'design a component', 'make a landing page', or asks for UI/UX work."
-compatibility: Designed for Claude Code-compatible agents. Uses Claude-specific hooks; other Agent Skills products may ignore these extensions. allowed-tools is optional and may be handled differently across clients.
+description: "Create production-grade frontend interfaces with strong UX and visual craft. Use when building web components, pages, dashboards, forms, landing pages, modals, or any UI. Use when user says 'build a form', 'create a dashboard', 'design a component', 'make a landing page', or asks for UI/UX work. Use even when the user just says 'make this look better' or pastes screenshots/mockups without explicitly naming a design task."
 allowed-tools: Read Write Edit
 hooks:
   Stop:
@@ -68,9 +67,11 @@ Run through checklist before delivering.
 | Empty states | Helpful message + clear action |
 | Error states | Explain what happened + how to fix |
 
-## Aesthetic Directions
+## Aesthetic Direction
 
-Match to context. See [REFERENCES.md](REFERENCES.md#aesthetic-directions) for characteristics.
+**Pick an extreme and commit.** Indecision produces generic output. Pick a clear conceptual direction — brutally minimal, maximalist, retro-futuristic, editorial, neubrutalist, organic, luxury/refined, industrial — and execute it with precision. Bold maximalism and refined minimalism both work; the failure mode is timid middle-ground.
+
+See [REFERENCES.md](REFERENCES.md#aesthetic-directions) for characteristics of each direction.
 
 | Style | Best For |
 |-------|----------|
@@ -80,6 +81,8 @@ Match to context. See [REFERENCES.md](REFERENCES.md#aesthetic-directions) for ch
 | Editorial | Content sites, publications |
 | Organic | Consumer apps, wellness, community |
 | Dark Mode | User preference, low-light contexts |
+
+Vary across generations. Never converge on the same display font (especially Inter, Space Grotesk, Roboto) or the same purple-on-white gradient that signals AI default output.
 
 ## Anti-Patterns
 

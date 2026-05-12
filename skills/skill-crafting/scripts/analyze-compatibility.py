@@ -13,11 +13,13 @@ from frontmatter import parse_simple_yaml
 
 
 # Agent Skills Standard (agentskills.io) - works everywhere
+# Per Anthropic docs, only `name` and `description` are required. Other fields
+# below are tolerated by analyzers but not part of the upstream spec.
 STANDARD_FIELDS = {
     'name': 'Required - skill identifier',
     'description': 'Required - what it does and when to use',
     'license': 'Optional - license name or file reference',
-    'compatibility': 'Optional - environment requirements',
+    'compatibility': 'Legacy convention - prose about cross-platform behavior',
     'metadata': 'Optional - arbitrary key-value pairs',
 }
 
@@ -92,12 +94,6 @@ def analyze_compatibility(frontmatter: dict) -> dict:
         result['recommendations'].append("Add required field: name")
     if 'description' not in frontmatter:
         result['recommendations'].append("Add required field: description")
-
-    # Recommend compatibility field if using Claude Code extensions
-    if result['claude_code_fields'] and 'compatibility' not in frontmatter:
-        result['recommendations'].append(
-            "Add 'compatibility' field to document platform differences"
-        )
 
     return result
 

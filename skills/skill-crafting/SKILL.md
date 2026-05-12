@@ -1,14 +1,8 @@
 ---
 name: skill-crafting
-description: "Create, fix, and validate skills for AI agents. Use when user says 'create a skill', 'build a skill', 'fix my skill', 'skill not working', 'analyze my skill', 'validate skill', 'audit my skills', 'check character budget', 'create a skill from this session', 'turn this into a skill', 'make this reusable', 'can this become a skill', 'should this be a skill', or asks for reusable patterns in the session."
-compatibility: Designed for Claude Code-compatible agents. Uses Claude-specific hooks; other Agent Skills products may ignore these extensions. allowed-tools is optional and may be handled differently across clients.
+description: "Create, fix, and validate skills for AI agents. Use when user says 'create a skill', 'build a skill', 'fix my skill', 'skill not working', 'analyze my skill', 'validate skill', 'audit my skills', 'check character budget', 'create a skill from this session', 'turn this into a skill', 'make this reusable', 'can this become a skill', 'should this be a skill', or asks for reusable patterns in the session. Use even if the user does not explicitly say 'skill' but is sketching a reusable workflow."
 allowed-tools: Read Write Bash(python:*)
 hooks:
-  PostToolUse:
-    - matcher: "Bash"
-      hooks:
-        - type: command
-          command: "python3 \"${CLAUDE_SKILL_DIR}/scripts/format-results.py\""
   Stop:
     - hooks:
         - type: prompt
@@ -167,11 +161,10 @@ skill-name/
 
 ```yaml
 ---
-name: skill-name          # lowercase, hyphens, <64 chars
-description: "..."        # CRITICAL - what it does + trigger clauses
-compatibility: "..."      # optional - environment/product requirements
-allowed-tools: Read Bash(python:*)  # optional, space-delimited
-context: fork             # optional - run in isolated subagent
+name: skill-name          # required, lowercase + hyphens, <64 chars
+description: "..."        # required, <1024 chars, trigger clauses only
+allowed-tools: Read Bash(python:*)  # optional, Claude Code extension
+context: fork             # optional, Claude Code extension (isolated subagent)
 ---
 
 # Skill Name
@@ -316,6 +309,25 @@ Choose A, B, or C.
 - Are instructions followed under pressure?
 - What rationalizations appear? ("just this once", "spirit not letter")
 - Where does agent struggle?
+
+## Evaluating Trigger Accuracy
+
+Static analysis (`analyze-cso.py`) only tells you the description *looks* compliant. To know if it actually triggers, run realistic prompts.
+
+### Quick check (no harness)
+
+1. Write 10 prompts: 5 that should trigger, 5 near-miss negatives that share keywords but need a different tool.
+2. Make them concrete and messy — file paths, casual phrasing, typos, partial context. Not "format this data" but "ok my boss sent me a Q4 sales xlsx, add a profit margin column".
+3. Open a fresh session per prompt; observe whether the skill is consulted.
+4. Tune the description toward the failing should-trigger prompts. Watch for near-miss negatives that now over-trigger.
+
+### Why near-misses matter most
+
+Should-not-trigger prompts that share keywords (e.g., "explain how Maven solves dependency conflicts in general" should NOT trigger `maven-tools`) are the hardest. Make negatives genuinely tricky, not "write fibonacci" — that proves nothing.
+
+### When to invest more
+
+For high-traffic skills, automate it: store the prompts as a JSON eval set, run each through a fresh Claude session, score trigger / no-trigger, then have Claude propose description tweaks based on the failures. Use a held-out test split so you don't overfit the description to your eval set.
 
 ## Self-Healing Skills
 

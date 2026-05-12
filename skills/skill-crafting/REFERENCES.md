@@ -669,6 +669,7 @@ For the **current conversation**, you already have full context. No script neede
 - [Anthropic Skill Best Practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)
 - [Claude Code Skills](https://code.claude.com/docs/en/skills)
 - [Agent Skills Standard](https://agentskills.io)
+- [anthropics/skills](https://github.com/anthropics/skills) — first-party skills repo; the `skill-creator` skill includes a full description-optimization harness if you need automated trigger eval
 
 ### Research & Articles
 
