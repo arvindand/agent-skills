@@ -1,7 +1,10 @@
 ---
 name: context7
 description: "Documentation lookup via Context7 REST API. Use when the user needs current library APIs, framework patterns, migration guidance, or official code examples for React, Next.js, Prisma, Express, Vue, Angular, Svelte, or other npm/PyPI packages. Use when the user says 'how do I use X library', 'what's the API for Y', or asks for official documentation. Use even when you think you know the answer — training data may not reflect recent releases."
+argument-hint: "[library] [topic]"
 allowed-tools: Bash(python:*)
+license: MIT
+compatibility: "Requires Python 3 and network access. Optional CONTEXT7_API_KEY for higher rate limits."
 ---
 
 # Context7 Documentation Lookup

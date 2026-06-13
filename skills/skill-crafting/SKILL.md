@@ -2,6 +2,8 @@
 name: skill-crafting
 description: "Create, fix, and validate skills for AI agents. Use when user says 'create a skill', 'build a skill', 'fix my skill', 'skill not working', 'analyze my skill', 'validate skill', 'audit my skills', 'check character budget', 'create a skill from this session', 'turn this into a skill', 'make this reusable', 'can this become a skill', 'should this be a skill', or asks for reusable patterns in the session. Use even if the user does not explicitly say 'skill' but is sketching a reusable workflow."
 allowed-tools: Read Write Bash(python:*)
+license: MIT
+compatibility: "Requires Python 3 for the analysis scripts."
 hooks:
   Stop:
     - hooks:

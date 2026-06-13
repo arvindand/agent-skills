@@ -1,7 +1,9 @@
 ---
 name: maven-tools
-description: "JVM dependency intelligence via Maven Tools MCP server. Use when the user asks about Maven or Gradle dependencies, JVM library versions, safe upgrades, CVEs, license risks, release history, or project dependency health. Use when reviewing `pom.xml`, `build.gradle`, `build.gradle.kts`, or Maven coordinates. Use when the user says 'check my dependencies', 'should I upgrade X', or 'is this version safe'. Use even when the user just pastes a `groupId:artifactId` coordinate without a verb."
+description: "JVM dependency intelligence via Maven Tools MCP server. Use when the user asks about Maven or Gradle dependencies, safe upgrades, CVEs, license risks, release history, or project dependency health. Use when reviewing `pom.xml`, `build.gradle`, `build.gradle.kts`, or Maven coordinates. Use when the user says 'check my dependencies', 'should I upgrade X', 'what can I safely bump', or 'is this version safe'. Use even when the user just pastes a `groupId:artifactId` coordinate without a verb."
 allowed-tools: mcp__maven-tools__* mcp__context7__* WebSearch WebFetch
+license: MIT
+compatibility: "Requires the Maven Tools MCP server (arvindand/maven-tools-mcp) and network access."
 ---
 
 # Maven Tools
@@ -37,15 +39,18 @@ Choose the narrowest tool that matches the request:
 | latest version lookup | `get_latest_version` | `stabilityFilter: PREFER_STABLE` |
 | check exact version | `check_version_exists` | none |
 | bulk candidate check (no current versions) | `check_multiple_dependencies` | `stabilityFilter: PREFER_STABLE` |
-| upgrade analysis (with current versions) | `compare_dependency_versions` | `includeSecurityScan: true`, `stabilityFilter: STABLE_ONLY` |
+| upgrade analysis (single coordinate, with current version) | `compare_dependency_versions` | `includeSecurityScan: true`, `stabilityFilter: STABLE_ONLY` |
+| whole-POM upgrade plan (raw `pom.xml`) | `recommend_pom_upgrades` | `mode: MINOR_PATCH` |
+| resolve effective POM versions (raw `pom.xml`) | `analyze_pom_dependencies` | none |
 | age/freshness | `analyze_dependency_age` | use project-appropriate threshold |
-| maintenance signal | `analyze_release_patterns` | `monthsToAnalyze: 24` |
-| release history | `get_version_timeline` | `versionCount: 20` |
+| maintenance signal / release history | `analyze_release_patterns` | `monthsToAnalyze: 24` |
 | full project audit | `analyze_project_health` | `includeSecurityScan: true`, `includeLicenseScan: true`, `stabilityFilter: PREFER_STABLE` |
 
 Default to `analyze_project_health` when the user says "check my dependencies" or pastes a project dependency set.
 
-Use `check_multiple_dependencies` for candidate sets without current versions. Use `compare_dependency_versions` for upgrade decisions on current versions. Use `analyze_project_health` for broad audits, not every single dependency question.
+When the user provides raw `pom.xml` content, prefer the POM-aware tools: `analyze_pom_dependencies` resolves and classifies effective versions (`EXPLICIT` / `MANAGED` / `EXPLICIT_OVERRIDE`) and surfaces multi-BOM conflicts; `recommend_pom_upgrades` returns an actionable upgrade plan. Both walk the parent chain, apply `<dependencyManagement>`, and resolve `<scope>import</scope>` BOMs; pass `sideloadedPoms` for monorepo siblings or unreleased parents.
+
+Use `check_multiple_dependencies` for candidate sets without current versions. Use `compare_dependency_versions` for single-coordinate upgrade decisions. Use `analyze_project_health` for broad audits, not every single dependency question.
 
 ## Workflow
 
@@ -57,7 +62,19 @@ Use `check_multiple_dependencies` for candidate sets without current versions. U
    - what is safe to do now
    - what needs manual review
 
-For upgrade questions, prefer `compare_dependency_versions` with:
+### Whole-POM upgrades and bot-like maintenance
+
+When the user hands you a raw `pom.xml` and wants to know what to upgrade ("what can I safely bump?", scheduled maintenance, dependency-bot replacement), lead with `recommend_pom_upgrades`:
+
+- `mode: MINOR_PATCH` (default) keeps major upgrades out of the safe path
+- apply `deterministic_actions[]` directly — these are mechanical `<version>` edits (`explicit_bump` for declared deps, `bom_bump` for user-controllable BOMs)
+- route `needs_attention[]` (majors, multi-BOM conflicts, explicit overrides) to human or LLM review; each entry carries the Maven Central latest for context
+
+One call returns everything mechanical plus the review queue — no per-coordinate fan-out for whole-POM flows. Reach for `analyze_pom_dependencies` first when the user wants the raw resolution ("what does my POM actually resolve to?") without recommendations.
+
+### Single-coordinate upgrade decisions
+
+For a specific dependency ("should I upgrade X from 2.7 to 3.2?"), prefer `compare_dependency_versions` with:
 
 - `includeSecurityScan: true`
 - `stabilityFilter: STABLE_ONLY`
@@ -72,8 +89,6 @@ When `compare_dependency_versions` returns `same_major_stable_fallback`:
 - treat the top-level major upgrade as the long-term path
 - treat the fallback as the safest immediate upgrade target
 - surface both, but recommend the fallback first for conservative maintenance workflows
-
-This is especially important for "safe update" or bot-like maintenance flows.
 
 If the user asks whether a dependency is safe:
 

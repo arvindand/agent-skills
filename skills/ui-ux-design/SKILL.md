@@ -1,7 +1,9 @@
 ---
 name: ui-ux-design
 description: "Create production-grade frontend interfaces with strong UX and visual craft. Use when building web components, pages, dashboards, forms, landing pages, modals, or any UI. Use when user says 'build a form', 'create a dashboard', 'design a component', 'make a landing page', or asks for UI/UX work. Use even when the user just says 'make this look better' or pastes screenshots/mockups without explicitly naming a design task."
+argument-hint: "[component or page to build]"
 allowed-tools: Read Write Edit
+license: MIT
 hooks:
   Stop:
     - hooks:

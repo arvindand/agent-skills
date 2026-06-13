@@ -36,7 +36,7 @@ Works with Claude Code, GitHub Copilot, OpenCode, Cursor, and VS Code with Copil
 |-------|-------------|---------|
 | [context7](skills/context7/) | Library documentation lookup via Context7 REST API | Getting up-to-date docs for React, Next.js, Prisma, etc. |
 | [github-navigator](skills/github-navigator/) | GitHub operations via gh CLI with deep analysis mode | All GitHub operations + codebase analysis via cloning |
-| [maven-tools](skills/maven-tools/) | JVM dependency intelligence via [Maven Tools MCP server](https://github.com/arvindand/maven-tools-mcp) | Version checks, safer upgrade planning, JVM dependency bot replacement flows, CVE scanning, license compliance |
+| [maven-tools](skills/maven-tools/) | JVM dependency intelligence via [Maven Tools MCP server](https://github.com/arvindand/maven-tools-mcp) | Version checks, POM-aware upgrade planning, JVM dependency bot replacement flows, CVE scanning, license compliance |
 | [skill-crafting](skills/skill-crafting/) | Create, fix, validate skills + generate from session history | Creating skills, fixing issues, CSO compliance, session-to-skill conversion |
 | [ui-ux-design](skills/ui-ux-design/) | Create production-grade interfaces with strong UX foundations | Building functional, accessible, visually distinctive UI/UX |
 
@@ -96,7 +96,6 @@ When running in Claude Code, these skills leverage additional features:
 |---------|--------|--------------|
 | Context forking | github-navigator | Runs in isolated subagent to avoid polluting main context |
 | Stop hooks | skill-crafting, ui-ux-design | Verifies task completion before declaring done |
-| PostToolUse hooks | github-navigator, skill-crafting | Validates output and formats results |
 | Tool restrictions | All | Limits which tools each skill can use |
 
 Other platforms get core functionality without these enhancements.

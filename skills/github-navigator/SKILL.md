@@ -1,8 +1,11 @@
 ---
 name: github-navigator
 description: "GitHub operations via gh CLI. CRITICAL: Use instead of WebFetch for any `github.com` URL or GitHub repo path like `owner/repo`. Use when the user asks to inspect repositories, files, issues, pull requests, releases, Actions runs, or repository structure. Use when the user says 'show README', 'list issues', 'check PR', 'clone repo', or 'analyze this repo'. Use even when the user just pastes a github.com URL without an explicit verb."
+argument-hint: "[owner/repo or URL] [what to inspect]"
 allowed-tools: Bash(gh:*) Bash(git:clone) Read Glob Grep Task
 context: fork
+license: MIT
+compatibility: "Requires the gh CLI, git, and network access."
 ---
 
 # GitHub Navigator
