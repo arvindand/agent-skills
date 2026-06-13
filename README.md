@@ -116,7 +116,7 @@ I'm biased towards skills over MCP. Here's why.
 
 ### Skills are cheaper and at least as effective as MCP tools when done well
 
-MCP loads all tool schemas into every conversation whether you use them or not. Ten tools? That's roughly 1,000 tokens added to every single request. Update: The tool search tool reduces this overhead but it still exists (See <https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool>)
+MCP loads all tool schemas into every conversation whether you use them or not. Ten tools? That's roughly 1,000 tokens added to every single request. Update (2026): Anthropic's [tool search tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool) now defers schemas and loads them on demand — but it's default-on only in Claude Code, opt-in elsewhere, and most MCP clients still preload. The overhead is reduced, not gone.
 
 Skills are free until you need them. When a skill triggers, you pay for ~100 words of metadata. That's it.
 
@@ -133,7 +133,7 @@ Instead, teach the pattern:
 
 The skill stays current as the CLI evolves. No maintenance needed.
 
-> See <https://simonw.substack.com/p/openai-are-quietly-adopting-skills>
+> See Simon Willison, ["Claude Skills are awesome, maybe a bigger deal than MCP"](https://simonwillison.net/2025/Oct/16/claude-skills/) (Oct 2025) — the source of the CLI-over-MCP argument.
 
 ### When the line is blurry, optimize for cost
 
@@ -151,6 +151,15 @@ Use MCP when:
 Skills and MCP can work together. You can write a skill that teaches the AI how to use your MCP servers effectively.
 
 The `maven-tools` skill is a good example of that hybrid model: the MCP server does the dependency intelligence work, and the skill keeps the orchestration patterns lean, portable, and easier to evolve.
+
+### What's changed (2026)
+
+The skills-vs-MCP split has aged toward convergence:
+
+- **OpenAI adopted the [Agent Skills standard](https://agentskills.io) in Codex** and uses skills internally — so a single `SKILL.md` now travels across Claude Code, Copilot, Cursor, OpenCode, and Codex.
+- **Anthropic donated MCP to the vendor-neutral [Agentic AI Foundation](https://blog.modelcontextprotocol.io/posts/2025-12-09-mcp-joins-agentic-ai-foundation)** (Linux Foundation, co-founded with OpenAI and Block).
+
+Skills and MCP are becoming shared, cross-vendor infrastructure — which is why I reach for skills first but keep both.
 
 ## License
 
