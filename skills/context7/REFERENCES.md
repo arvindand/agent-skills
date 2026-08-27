@@ -4,9 +4,11 @@ Optional quick lookup material for when the main workflow needs concrete example
 
 ## Common Library IDs
 
-These are useful shortcuts when you already know the target library:
+Starting points only. Library IDs are assigned upstream and get renamed, so treat any ID
+here as a guess and fall back to `search` the moment a fetch fails. A renamed ID returns
+a redirect rather than a 404.
 
-- React: `/facebook/react`
+- React: `/reactjs/react.dev`
 - Next.js: `/vercel/next.js`
 - Prisma: `/prisma/prisma`
 - Supabase: `/supabase/supabase`
@@ -16,16 +18,16 @@ These are useful shortcuts when you already know the target library:
 
 ```bash
 # Search when the library ID is unclear
-python3 scripts/context7.py search "next.js app router"
+python3 ${CLAUDE_SKILL_DIR}/scripts/context7.py search "next.js app router"
 
 # Fetch API/code examples
-python3 scripts/context7.py docs /facebook/react hooks
+python3 ${CLAUDE_SKILL_DIR}/scripts/context7.py docs /reactjs/react.dev hooks
 
 # Fetch conceptual docs
-python3 scripts/context7.py docs /vercel/next.js "app router" info
+python3 ${CLAUDE_SKILL_DIR}/scripts/context7.py docs /vercel/next.js "app router" info
 
-# Fetch version-specific docs
-python3 scripts/context7.py docs /vercel/next.js/14 "server actions"
+# Fetch version-specific docs (full upstream tag, not a bare major)
+python3 ${CLAUDE_SKILL_DIR}/scripts/context7.py docs /vercel/next.js/v15.1.8 "server actions"
 ```
 
 ## Usage Notes
@@ -40,7 +42,7 @@ python3 scripts/context7.py docs /vercel/next.js/14 "server actions"
 - Broaden the topic if the result is too narrow or empty.
 - Switch modes if `code` gives weak results and the user really needs guides or migration context.
 - Re-run search if the library name is ambiguous or the ID looks wrong.
-- Use `python3 scripts/context7.py --help` when the command syntax is unclear.
+- Use `python3 ${CLAUDE_SKILL_DIR}/scripts/context7.py --help` when the command syntax is unclear.
 
 ---
 

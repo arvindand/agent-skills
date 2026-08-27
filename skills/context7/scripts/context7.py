@@ -10,7 +10,7 @@ Usage:
 Examples:
     context7.py search react
     context7.py search "next.js app router"
-    context7.py docs /facebook/react hooks
+    context7.py docs /reactjs/react.dev hooks
     context7.py docs /vercel/next.js routing
     context7.py docs /prisma/prisma queries info
 """
@@ -48,10 +48,20 @@ def make_request(url):
             return response.read().decode("utf-8")
     except HTTPError as e:
         print(f"HTTP Error {e.code}: {e.reason}", file=sys.stderr)
-        if e.code == 404:
+        if e.code in (301, 302, 308):
             print("Suggestions:", file=sys.stderr)
             print(
-                "  - Verify the library ID format: /org/project (e.g., /facebook/react)",
+                "  - This library ID has moved or been renamed upstream",
+                file=sys.stderr,
+            )
+            print(
+                "  - Run 'context7.py search <name>' to get the current ID",
+                file=sys.stderr,
+            )
+        elif e.code == 404:
+            print("Suggestions:", file=sys.stderr)
+            print(
+                "  - Verify the library ID format: /org/project (e.g., /reactjs/react.dev)",
                 file=sys.stderr,
             )
             print(
@@ -140,7 +150,7 @@ def fetch_docs(library_id, topic="", mode="code"):
     """Fetch documentation for a library.
 
     Args:
-        library_id: Library ID (e.g., /facebook/react)
+        library_id: Library ID (e.g., /reactjs/react.dev)
         topic: Optional focus area (e.g., hooks, routing)
         mode: 'code' for API/examples or 'info' for guides
     """
@@ -159,7 +169,7 @@ def fetch_docs(library_id, topic="", mode="code"):
         print("  mode          Optional: 'code' (default) or 'info'", file=sys.stderr)
         print("", file=sys.stderr)
         print("Examples:", file=sys.stderr)
-        print("  context7.py docs /facebook/react hooks", file=sys.stderr)
+        print("  context7.py docs /reactjs/react.dev hooks", file=sys.stderr)
         print("  context7.py docs /vercel/next.js routing code", file=sys.stderr)
         print('  context7.py docs /vercel/next.js "app router" info', file=sys.stderr)
         sys.exit(1)
@@ -203,7 +213,7 @@ def show_help():
     print("Examples:")
     print("  context7.py search react")
     print('  context7.py search "next.js app router"')
-    print("  context7.py docs /facebook/react hooks")
+    print("  context7.py docs /reactjs/react.dev hooks")
     print("  context7.py docs /vercel/next.js routing")
     print("  context7.py docs /prisma/prisma queries info")
     print("")

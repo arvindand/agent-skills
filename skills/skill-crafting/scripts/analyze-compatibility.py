@@ -12,22 +12,34 @@ from pathlib import Path
 from frontmatter import parse_simple_yaml
 
 
-# Agent Skills Standard (agentskills.io) - works everywhere
-# Per Anthropic docs, only `name` and `description` are required. Other fields
-# below are tolerated by analyzers but not part of the upstream spec.
+# Agent Skills spec (agentskills.io) - the six fields accepted by claude.ai skill
+# uploads, the Skills API, and package_skill.py. Anything else fails validation there
+# with "Unexpected key(s) in SKILL.md frontmatter".
 STANDARD_FIELDS = {
-    'name': 'Required - skill identifier',
-    'description': 'Required - what it does and when to use',
+    'name': 'Optional - defaults to directory name; sets the display label',
+    'description': 'Recommended - falls back to first paragraph of the body',
     'license': 'Optional - license name or file reference',
-    'compatibility': 'Legacy convention - prose about cross-platform behavior',
-    'metadata': 'Optional - arbitrary key-value pairs',
+    'compatibility': 'Optional - environment prerequisites, max 500 chars',
+    'metadata': 'Optional - free-form map for your own tooling',
+    'allowed-tools': 'Optional - tool pre-authorization for the invoking turn',
 }
 
-# Claude Code Extensions - gracefully ignored by other platforms
+# Claude Code extensions - rejected by the spec-only paths above
 CLAUDE_CODE_FIELDS = {
-    'allowed-tools': 'Tool pre-authorization',
-    'hooks': 'Event hooks (PreToolUse, PostToolUse, UserPromptSubmit, Stop)',
+    'when_to_use': 'Extra trigger phrases, appended to description in the listing',
+    'argument-hint': 'Autocomplete hint for expected arguments',
+    'arguments': 'Named positional arguments for $name substitution',
+    'disable-model-invocation': 'Only the user can invoke the skill',
+    'user-invocable': 'Only Claude can invoke the skill',
+    'disallowed-tools': 'Tools removed from the pool while the skill is active',
+    'model': 'Model override for the rest of the turn',
+    'effort': 'Effort level override while the skill is active',
     'context': 'Execution context (fork for isolated subagent)',
+    'agent': 'Subagent type used when context: fork is set',
+    'background': 'With context: fork, whether to run in the background (default true)',
+    'paths': 'Globs limiting when the skill auto-activates',
+    'shell': 'Shell for inline command injection (bash or powershell)',
+    'hooks': 'Event hooks registered on invocation, persisting for the session',
 }
 
 # Known hook types

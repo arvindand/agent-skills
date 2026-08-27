@@ -18,7 +18,8 @@ WORKFLOW_HINTS = [
     (r'\bexecutes?\b', 'Uses "execute" (workflow hint)'),
     (r'\bdiscover\w*\s+\w*\s*dynamically', 'Mentions dynamic discovery (workflow hint)'),
     (r'\bstep\s*\d', 'References steps (workflow hint)'),
-    (r'\bworkflow\b', 'Uses "workflow" in description'),
+    # "reusable workflow" is a trigger phrase, not a workflow summary
+    (r'(?<!reusable )\bworkflow\b', 'Uses "workflow" in description'),
     (r'\bprocess\b.*\b(files?|data)\b', 'Describes processing (workflow hint)'),
     (r'\bparses?\b', 'Uses "parse" (workflow hint)'),
     (r'\banalyzes?\s+and\s+', 'Describes analysis process (workflow hint)'),

@@ -42,7 +42,7 @@ Works with Claude Code, GitHub Copilot, OpenCode, Cursor, and VS Code with Copil
 
 ## Output Styles
 
-Customize Claude's response style via `/output-style`:
+Customize Claude's response style via `/config` → **Output style** (the standalone `/output-style` command was removed in v2.1.91):
 
 | Style | Description |
 |-------|-------------|
@@ -85,8 +85,8 @@ See [skill-crafting/REFERENCES.md](skills/skill-crafting/REFERENCES.md) for best
 
 Skills use **progressive enhancement**:
 
-- **Core fields** (`name`, `description`) work everywhere
-- **Claude Code features** should be ignored by other platforms
+- **Spec fields** (`name`, `description`, `license`, `compatibility`, `metadata`, `allowed-tools`) work everywhere
+- **Claude Code extensions** (`context`, `background`, `hooks`) are additive; the spec-only paths — claude.ai skill uploads, the Skills API, `package_skill.py` — reject unknown keys rather than ignoring them, so these skills keep their frontmatter to the six fields plus the extensions Claude Code needs
 
 ### Claude Code Enhancements
 
@@ -94,9 +94,9 @@ When running in Claude Code, these skills leverage additional features:
 
 | Feature | Skills | What It Does |
 |---------|--------|--------------|
-| Context forking | github-navigator | Runs in isolated subagent to avoid polluting main context |
+| Context forking | github-navigator | Runs in isolated subagent to avoid polluting main context, with `background: false` so the result lands in the invoking turn |
 | Stop hooks | skill-crafting, ui-ux-design | Verifies task completion before declaring done |
-| Tool restrictions | All | Limits which tools each skill can use |
+| Tool pre-approval | All | `allowed-tools` skips permission prompts for the invoking turn. It does not restrict anything — every tool stays callable and your permission settings still apply |
 
 Other platforms get core functionality without these enhancements.
 

@@ -1,15 +1,14 @@
 ---
 name: context7
 description: "Documentation lookup via Context7 REST API. Use when the user needs current library APIs, framework patterns, migration guidance, or official code examples for React, Next.js, Prisma, Express, Vue, Angular, Svelte, or other npm/PyPI packages. Use when the user says 'how do I use X library', 'what's the API for Y', or asks for official documentation. Use even when you think you know the answer — training data may not reflect recent releases."
-argument-hint: "[library] [topic]"
-allowed-tools: Bash(python:*)
+allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/context7.py *)
 license: MIT
 compatibility: "Requires Python 3 and network access. Optional CONTEXT7_API_KEY for higher rate limits."
 ---
 
 # Context7 Documentation Lookup
 
-Use `scripts/context7.py` to fetch current library documentation without MCP tool-schema overhead.
+Use `${CLAUDE_SKILL_DIR}/scripts/context7.py` to fetch current library documentation without MCP tool-schema overhead.
 
 This is an execution skill. Decide whether to search or fetch directly, run the script, then use the returned docs to answer. Keep the main flow lean and load [REFERENCES.md](REFERENCES.md) only when you need example commands, common library IDs, or troubleshooting details.
 
@@ -28,13 +27,13 @@ Activate when the user asks for:
 1. If you already know the library ID, skip search and call:
 
    ```bash
-   python3 scripts/context7.py docs <library-id> [topic] [mode]
+   python3 ${CLAUDE_SKILL_DIR}/scripts/context7.py docs <library-id> [topic] [mode]
    ```
 
 2. If the library ID is unclear, search first:
 
    ```bash
-   python3 scripts/context7.py search "<query>"
+   python3 ${CLAUDE_SKILL_DIR}/scripts/context7.py search "<query>"
    ```
 
 3. Pick the best matching library ID, then fetch docs.
@@ -46,12 +45,12 @@ Activate when the user asks for:
 - Use `code` mode (default) for API references, function signatures, and implementation examples.
 - Use `info` mode for conceptual guides, architecture, and migration-heavy questions.
 - Use a focused topic first; broaden it if results are empty or off-target.
-- For version-specific docs, append the version to the library ID (for example `/vercel/next.js/14`) or include the version in the topic.
+- For version-specific docs, append the full upstream tag to the library ID (for example `/vercel/next.js/v15.1.8`), or include the version in the topic. A bare major such as `/vercel/next.js/15` does not resolve.
 
 If syntax is unclear, run:
 
 ```bash
-python3 scripts/context7.py --help
+python3 ${CLAUDE_SKILL_DIR}/scripts/context7.py --help
 ```
 
 ## Output Rules
@@ -69,7 +68,7 @@ python3 scripts/context7.py --help
 | Results are empty or irrelevant | Broaden the topic, then retry with the other mode (`code` vs `info`). |
 | User needs a specific version | Add the version to the library ID or mention it in the topic, then verify the returned docs match. |
 | Rate limited | Tell the user about `CONTEXT7_API_KEY`, then use best-effort fallback guidance if needed. |
-| Script usage is unclear | Run `python3 scripts/context7.py --help`. |
+| Script usage is unclear | Run `python3 ${CLAUDE_SKILL_DIR}/scripts/context7.py --help`. |
 | Script or network failure | Say live docs lookup failed and continue with clearly-labeled fallback knowledge. |
 
 ---

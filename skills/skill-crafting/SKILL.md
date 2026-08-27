@@ -1,7 +1,7 @@
 ---
 name: skill-crafting
 description: "Create, fix, and validate skills for AI agents. Use when user says 'create a skill', 'build a skill', 'fix my skill', 'skill not working', 'analyze my skill', 'validate skill', 'audit my skills', 'check character budget', 'create a skill from this session', 'turn this into a skill', 'make this reusable', 'can this become a skill', 'should this be a skill', or asks for reusable patterns in the session. Use even if the user does not explicitly say 'skill' but is sketching a reusable workflow."
-allowed-tools: Read Write Bash(python:*)
+allowed-tools: Read Write Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/*)
 license: MIT
 compatibility: "Requires Python 3 for the analysis scripts."
 hooks:
@@ -46,7 +46,7 @@ When user asks to analyze a skill:
 
 1. **Run scripts first when available** for mechanical checks:
    ```bash
-   python3 scripts/analyze-all.py path/to/skill/
+   python3 ${CLAUDE_SKILL_DIR}/scripts/analyze-all.py path/to/skill/
    ```
 
    If scripts fail because of environment or tooling issues, state the blocker clearly and continue with manual review.
@@ -70,16 +70,16 @@ When user asks to analyze a skill:
 
 | Script | Purpose | Usage |
 |--------|---------|-------|
-| `analyze-all.py` | Run all checks | `python3 scripts/analyze-all.py path/to/skill/` |
-| `analyze-cso.py` | Check CSO compliance | `python3 scripts/analyze-cso.py path/to/SKILL.md` |
-| `analyze-tokens.py` | Count tokens | `python3 scripts/analyze-tokens.py path/to/SKILL.md` |
-| `analyze-triggers.py` | Find missing triggers | `python3 scripts/analyze-triggers.py path/to/SKILL.md` |
-| `check-char-budget.py` | Check 15K limit | `python3 scripts/check-char-budget.py path/to/skills/` |
+| `analyze-all.py` | Run all checks | `python3 ${CLAUDE_SKILL_DIR}/scripts/analyze-all.py path/to/skill/` |
+| `analyze-cso.py` | Check CSO compliance | `python3 ${CLAUDE_SKILL_DIR}/scripts/analyze-cso.py path/to/SKILL.md` |
+| `analyze-tokens.py` | Count tokens | `python3 ${CLAUDE_SKILL_DIR}/scripts/analyze-tokens.py path/to/SKILL.md` |
+| `analyze-triggers.py` | Find missing triggers | `python3 ${CLAUDE_SKILL_DIR}/scripts/analyze-triggers.py path/to/SKILL.md` |
+| `check-char-budget.py` | Check description caps | `python3 ${CLAUDE_SKILL_DIR}/scripts/check-char-budget.py path/to/skills/` |
 
 **Quick start:**
 ```bash
-python3 scripts/analyze-all.py ~/.claude/skills/my-skill/
-python3 scripts/check-char-budget.py ~/.claude/skills/
+python3 ${CLAUDE_SKILL_DIR}/scripts/analyze-all.py ~/.claude/skills/my-skill/
+python3 ${CLAUDE_SKILL_DIR}/scripts/check-char-budget.py ~/.claude/skills/
 ```
 
 ## Creating from Current Session
@@ -163,10 +163,11 @@ skill-name/
 
 ```yaml
 ---
-name: skill-name          # required, lowercase + hyphens, <64 chars
-description: "..."        # required, <1024 chars, trigger clauses only
-allowed-tools: Read Bash(python:*)  # optional, Claude Code extension
+name: skill-name          # optional, lowercase + hyphens, <64 chars; defaults to directory name
+description: "..."        # recommended, trigger clauses only, no workflow summary
+allowed-tools: Read Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/*)  # optional, spec field
 context: fork             # optional, Claude Code extension (isolated subagent)
+background: false         # optional, only with context: fork — wait for the result
 ---
 
 # Skill Name
@@ -180,6 +181,11 @@ context: fork             # optional, Claude Code extension (isolated subagent)
 ## Recovery
 [When things go wrong]
 ```
+
+Six fields are portable — `name`, `description`, `license`, `compatibility`, `metadata`,
+`allowed-tools`. Everything else works in Claude Code and is rejected by claude.ai uploads and
+the Skills API. See [REFERENCES.md](REFERENCES.md#frontmatter-reference) for the full field
+list, the description budget, and the Bash rule syntax traps.
 
 ## Claude Search Optimization (CSO)
 

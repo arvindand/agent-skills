@@ -3,7 +3,7 @@ name: maven-tools
 description: "JVM dependency intelligence via Maven Tools MCP server. Use when the user asks about Maven or Gradle dependencies, safe upgrades, CVEs, license risks, release history, or project dependency health. Use when reviewing `pom.xml`, `build.gradle`, `build.gradle.kts`, or Maven coordinates. Use when the user says 'check my dependencies', 'should I upgrade X', 'what can I safely bump', or 'is this version safe'. Use even when the user just pastes a `groupId:artifactId` coordinate without a verb."
 allowed-tools: mcp__maven-tools__* mcp__context7__* WebSearch WebFetch
 license: MIT
-compatibility: "Requires the Maven Tools MCP server (arvindand/maven-tools-mcp) and network access."
+compatibility: "Requires the Maven Tools MCP server (arvindand/maven-tools-mcp) 3.2.0 or later and network access."
 ---
 
 # Maven Tools
@@ -67,7 +67,12 @@ Use `check_multiple_dependencies` for candidate sets without current versions. U
 When the user hands you a raw `pom.xml` and wants to know what to upgrade ("what can I safely bump?", scheduled maintenance, dependency-bot replacement), lead with `recommend_pom_upgrades`:
 
 - `mode: MINOR_PATCH` (default) keeps major upgrades out of the safe path
-- apply `deterministic_actions[]` directly — these are mechanical `<version>` edits (`explicit_bump` for declared deps, `bom_bump` for user-controllable BOMs)
+- apply `deterministic_actions[]` directly — these are mechanical `<version>` edits:
+  - `explicit_bump` — declared dependencies
+  - `bom_bump` — user-controllable BOMs
+  - `managed_decl_bump` — direct, non-import `<dependencyManagement>` entries the input POM owns, including platform/master POMs with no normal `<dependencies>` usage (3.2.0+)
+  - `plugin_dep_bump` — direct dependencies under `build/plugins` and `build/pluginManagement`, such as `com.puppycrawl.tools:checkstyle` inside `maven-checkstyle-plugin` (3.2.0+)
+- owned-declaration actions carry edit-location metadata (`editTarget`, `propertyName`, `declaredIn`) telling you whether to edit a literal `<version>` or the backing property; `plugin_dep_bump` also names the owner plugin and build path, so apply the edit inside that plugin block rather than at the top level
 - route `needs_attention[]` (majors, multi-BOM conflicts, explicit overrides) to human or LLM review; each entry carries the Maven Central latest for context
 
 One call returns everything mechanical plus the review queue — no per-coordinate fan-out for whole-POM flows. Reach for `analyze_pom_dependencies` first when the user wants the raw resolution ("what does my POM actually resolve to?") without recommendations.

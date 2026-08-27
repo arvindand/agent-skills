@@ -42,20 +42,35 @@ except ImportError:
 # CONSTANTS
 # ============================================================================
 
-DEFAULT_CHAR_BUDGET = 15000
+# Single source of truth: the individual checkers own these rules. Keeping a second
+# copy here silently drifts, so import and fall back only if the modules are missing.
+try:
+    from analyze_cso_rules import WORKFLOW_HINTS  # noqa: F401
+except ImportError:
+    import importlib.util as _ilu
 
-WORKFLOW_HINTS = [
-    (r'\bruns?\b.*\bcommands?\b', 'Mentions running commands'),
-    (r'\bexecutes?\b', 'Uses "execute"'),
-    (r'\bdiscover\w*\s+\w*\s*dynamically', 'Mentions dynamic discovery'),
-    (r'\bstep\s*\d', 'References steps'),
-    (r'\bworkflow\b', 'Uses "workflow"'),
-    (r'\bparses?\b', 'Uses "parse"'),
-    (r'\bfirst\b.*\bthen\b', 'Sequential process description'),
-]
+    def _load(mod_name, filename):
+        spec = _ilu.spec_from_file_location(mod_name, Path(__file__).parent / filename)
+        module = _ilu.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
 
-STANDARD_FIELDS = {'name', 'description', 'license', 'compatibility', 'metadata'}
-CLAUDE_CODE_FIELDS = {'allowed-tools', 'hooks', 'context'}
+    try:
+        _cso = _load('_cso', 'analyze-cso.py')
+        _compat = _load('_compat', 'analyze-compatibility.py')
+        WORKFLOW_HINTS = _cso.WORKFLOW_HINTS
+        STANDARD_FIELDS = set(_compat.STANDARD_FIELDS)
+        CLAUDE_CODE_FIELDS = set(_compat.CLAUDE_CODE_FIELDS)
+        PER_SKILL_DESC_CAP = _load('_budget', 'check-char-budget.py').PER_SKILL_DESC_CAP
+    except Exception:
+        WORKFLOW_HINTS = [(r'(?<!reusable )\bworkflow\b', 'Uses "workflow"')]
+        STANDARD_FIELDS = {'name', 'description', 'license', 'compatibility',
+                           'metadata', 'allowed-tools'}
+        CLAUDE_CODE_FIELDS = {'when_to_use', 'argument-hint', 'arguments',
+                              'disable-model-invocation', 'user-invocable',
+                              'disallowed-tools', 'model', 'effort', 'context',
+                              'agent', 'background', 'paths', 'shell', 'hooks'}
+        PER_SKILL_DESC_CAP = 1536
 
 
 # ============================================================================

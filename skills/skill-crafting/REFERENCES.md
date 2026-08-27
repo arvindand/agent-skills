@@ -6,6 +6,7 @@ Best practices, patterns, and links for building skills.
 
 - [Discovery Over Documentation](#discovery-over-documentation)
 - [Progressive Disclosure](#progressive-disclosure)
+- [Frontmatter Reference](#frontmatter-reference)
 - [Description Optimization](#description-optimization)
 - [Token Efficiency](#token-efficiency)
 - [Naming Conventions](#naming-conventions)
@@ -70,6 +71,93 @@ skill/
 
 ---
 
+## Frontmatter Reference
+
+Only six fields are portable. Everything else is a Claude Code extension: it works in Claude
+Code and is rejected elsewhere.
+
+**Agent Skills spec** — accepted by claude.ai skill uploads, the Skills API, and
+`package_skill.py`:
+
+`name`, `description`, `license`, `compatibility`, `metadata`, `allowed-tools`
+
+Anything outside that set fails validation on those paths with:
+
+```
+Unexpected key(s) in SKILL.md frontmatter: argument-hint.
+Allowed properties are: allowed-tools, compatibility, description, license, metadata, name
+```
+
+Keep a skill spec-only when it needs to run outside Claude Code. Reach for the extensions
+below when Claude Code is the only target.
+
+### Spec fields
+
+| Field | Notes |
+|-------|-------|
+| `name` | Optional. Lowercase + hyphens, <64 chars. Defaults to the directory name. In a *plugin* skill it replaces the last command segment; in a personal or project skill it only sets the display label. |
+| `description` | Recommended, not required — falls back to the first paragraph of the body. Trigger clauses only, no workflow summary. |
+| `allowed-tools` | Space- or comma-separated string, or a YAML list. Pre-approves tools for the invoking turn only; the grant clears on your next message. Does not restrict anything. |
+| `license` | Accepted, not acted on by Claude Code. |
+| `compatibility` | Environment prerequisites, max 500 chars. Accepted, not acted on. |
+| `metadata` | Free-form map for your own tooling. Don't reuse real field names as keys. |
+
+### Claude Code extensions
+
+| Field | Notes |
+|-------|-------|
+| `when_to_use` | Extra trigger phrases, appended to `description` in the listing. |
+| `argument-hint` | Autocomplete hint, e.g. `[library] [topic]`. |
+| `arguments` | Named positional args for `$name` substitution in the body. |
+| `disable-model-invocation` | `true` = you invoke it, Claude can't. Also keeps it out of the listing entirely. |
+| `user-invocable` | `false` = Claude invokes it, you can't. Description stays in context. |
+| `disallowed-tools` | Removes tools from the pool while the skill is active. |
+| `model` / `effort` | Override for the rest of the turn. With `context: fork`, `model` sets the subagent's model. |
+| `context` | `fork` runs the skill in an isolated subagent. |
+| `agent` | Which subagent type `context: fork` uses. |
+| `background` | Only with `context: fork`. See below. |
+| `paths` | Globs limiting when the skill auto-activates. |
+| `shell` | `bash` (default) or `powershell` for inline command injection. |
+| `hooks` | Registers hooks on invocation; they persist for the session. |
+
+### Description budget
+
+The listing budget is **1% of the model's context window**, not a fixed number. Raise it with
+`skillListingBudgetFraction` or pin a character count with `SLASH_COMMAND_TOOL_CHAR_BUDGET`.
+
+Each entry's `description` + `when_to_use` is separately capped at **1,536 characters**
+(`skillListingMaxDescChars`). When the listing overflows its budget, Claude Code drops
+descriptions starting with the skills you invoke least — so put the key use case first.
+
+### Referencing bundled files
+
+A skill's body does not run from its own directory. Use `${CLAUDE_SKILL_DIR}` for anything
+you ship alongside `SKILL.md`, in both the body and the `allowed-tools` rule, so the
+pre-approval matches the command you actually tell Claude to run:
+
+```yaml
+allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/check.py *)
+```
+
+Other substitutions: `${CLAUDE_PROJECT_DIR}`, and in plugin skills `${CLAUDE_PLUGIN_ROOT}`
+and `${CLAUDE_PLUGIN_DATA}`.
+
+### Bash rule syntax traps
+
+`Bash(cmd:*)` is just another spelling of `Bash(cmd *)`, and the colon form is **only**
+recognized at the end of a pattern.
+
+| Rule | Matches |
+|------|---------|
+| `Bash(python:*)` | `python foo.py` — but **not** `python3 foo.py`, because the trailing wildcard enforces a word boundary |
+| `Bash(git:clone)` | nothing; the colon is mid-pattern, so it's literal |
+| `Bash(git clone:*)` | `git clone ...` |
+
+An allow rule naming a tool that doesn't exist fails silently — only deny and ask rules warn
+at startup. The subagent tool is `Agent`; `Task` is not a tool name.
+
+---
+
 ## Execution Context
 
 By default, skills run in the main conversation context. Use `context: fork` to run a skill in an isolated subagent:
@@ -79,8 +167,17 @@ By default, skills run in the main conversation context. Use `context: fork` to 
 name: deep-analysis
 description: "Perform deep code analysis..."
 context: fork
+background: false
 ---
 ```
+
+**A forked skill runs in the background by default.** You keep working and its result arrives
+when it finishes. Set `background: false` to wait for the result in the invoking turn — this
+is what you want for any skill whose answer the user is sitting there waiting for. Before
+v2.1.218 forked skills always blocked, so older skills written without `background` changed
+behavior underneath them.
+
+Claude Code waits regardless in non-interactive mode (`-p`) and the Agent SDK.
 
 **When to use `context: fork`:**
 
@@ -615,7 +712,7 @@ output = os.environ.get('TOOL_OUTPUT', '')
 if 'upgrade' in output.lower() and 'breaking' in output.lower():
     print("\n[maven-tools] Breaking changes detected in upgrade.")
     print("[maven-tools] Fetching migration documentation...")
-    print("→ Use context7: python3 scripts/context7.py docs /spring-projects/spring-boot 'migration'")
+    print("→ Use context7: python3 ${CLAUDE_SKILL_DIR}/scripts/context7.py docs /spring-projects/spring-boot 'migration'")
 ```
 
 ### References
@@ -632,16 +729,16 @@ Use the validation scripts included in skill-crafting:
 
 ```bash
 # Full analysis
-python3 scripts/analyze-all.py path/to/skill/
+python3 ${CLAUDE_SKILL_DIR}/scripts/analyze-all.py path/to/skill/
 
 # Check CSO compliance
-python3 scripts/analyze-cso.py path/to/SKILL.md
+python3 ${CLAUDE_SKILL_DIR}/scripts/analyze-cso.py path/to/SKILL.md
 
-# Check character budget (15K limit)
-python3 scripts/check-char-budget.py ~/.claude/skills/
+# Check the per-skill description cap and the listing total
+python3 ${CLAUDE_SKILL_DIR}/scripts/check-char-budget.py ~/.claude/skills/
 
 # Check cross-platform compatibility
-python3 scripts/analyze-compatibility.py path/to/skill/
+python3 ${CLAUDE_SKILL_DIR}/scripts/analyze-compatibility.py path/to/skill/
 ```
 
 ---
