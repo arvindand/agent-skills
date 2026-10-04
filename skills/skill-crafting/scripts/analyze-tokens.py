@@ -8,7 +8,7 @@ Estimates token usage and context cost of loading a skill.
 import sys
 from pathlib import Path
 
-from frontmatter import parse_simple_yaml
+from frontmatter import parse_frontmatter
 
 
 def estimate_tokens(text: str) -> int:
@@ -26,20 +26,6 @@ def count_words(text: str) -> int:
     return len(text.split())
 
 
-def parse_frontmatter(content: str) -> tuple:
-    """Parse frontmatter and return (frontmatter_dict, body)."""
-    if not content.startswith('---'):
-        return {}, content
-
-    try:
-        end = content.index('---', 3)
-        yaml_content = content[3:end].strip()
-        body = content[end + 3:].strip()
-        return parse_simple_yaml(yaml_content), body
-    except ValueError:
-        return {}, content
-
-
 def analyze_skill_tokens(skill_path: Path) -> dict:
     """Analyze token usage of a skill."""
     if skill_path.is_file():
@@ -52,8 +38,14 @@ def analyze_skill_tokens(skill_path: Path) -> dict:
     if not skill_file.exists():
         return {'error': f"SKILL.md not found"}
 
-    content = skill_file.read_text(encoding='utf-8')
-    frontmatter, body = parse_frontmatter(content)
+    try:
+        content = skill_file.read_text(encoding='utf-8')
+        frontmatter, body = parse_frontmatter(content)
+    except (ValueError, OSError) as error:
+        return {'error': f"Could not parse {skill_file}: {error}"}
+
+    if not frontmatter:
+        return {'error': "Could not parse YAML frontmatter"}
 
     result = {
         'name': frontmatter.get('name', skill_dir.name),

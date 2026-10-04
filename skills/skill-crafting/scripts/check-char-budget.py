@@ -42,7 +42,7 @@ def parse_skill_description(skill_path: Path) -> dict:
         data, _ = parse_frontmatter(content)
 
         if not data:
-            return None
+            return {'error': 'Missing YAML frontmatter', 'path': str(skill_md)}
 
         # when_to_use is appended to description in the listing and counts toward the cap
         description = data.get('description', '') or ''
@@ -54,8 +54,8 @@ def parse_skill_description(skill_path: Path) -> dict:
             'description': listing_text,
             'path': str(skill_path),
         }
-    except (ValueError, OSError):
-        return None
+    except (ValueError, OSError) as error:
+        return {'error': str(error), 'path': str(skill_md)}
 
 
 def scan_skills_directory(skills_dir: str) -> list:
@@ -85,6 +85,9 @@ def scan_skills_directory(skills_dir: str) -> list:
 
 def analyze_budget(skills: list, budget: int = DEFAULT_CHAR_BUDGET) -> dict:
     """Analyze character budget usage."""
+    errors = [skill for skill in skills if 'error' in skill]
+    if errors:
+        raise ValueError("Cannot calculate a complete budget with unparsed skills")
     total_chars = 0
     breakdown = []
 
@@ -180,6 +183,13 @@ def main():
 
     if not skills:
         print(f"No skills found in: {skills_dir}")
+        sys.exit(1)
+
+    errors = [skill for skill in skills if 'error' in skill]
+    if errors:
+        for skill in errors:
+            print(f"❌ Could not parse {skill['path']}: {skill['error']}")
+        print("Character budget not calculated: fix the unparsed skills and run again.")
         sys.exit(1)
 
     analysis = analyze_budget(skills, budget)

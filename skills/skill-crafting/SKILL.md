@@ -74,6 +74,7 @@ When user asks to analyze a skill:
 | `analyze-cso.py` | Check CSO compliance | `python3 ${CLAUDE_SKILL_DIR}/scripts/analyze-cso.py path/to/SKILL.md` |
 | `analyze-tokens.py` | Count tokens | `python3 ${CLAUDE_SKILL_DIR}/scripts/analyze-tokens.py path/to/SKILL.md` |
 | `analyze-triggers.py` | Find missing triggers | `python3 ${CLAUDE_SKILL_DIR}/scripts/analyze-triggers.py path/to/SKILL.md` |
+| `analyze-compatibility.py` | Report standard, extension, and unknown fields | `python3 ${CLAUDE_SKILL_DIR}/scripts/analyze-compatibility.py path/to/skill/` |
 | `check-char-budget.py` | Check description caps | `python3 ${CLAUDE_SKILL_DIR}/scripts/check-char-budget.py path/to/skills/` |
 
 **Quick start:**
@@ -81,6 +82,16 @@ When user asks to analyze a skill:
 python3 ${CLAUDE_SKILL_DIR}/scripts/analyze-all.py ~/.claude/skills/my-skill/
 python3 ${CLAUDE_SKILL_DIR}/scripts/check-char-budget.py ~/.claude/skills/
 ```
+
+The scripts use a dependency-free YAML subset: plain multiline strings, single-line
+quoted strings, literal (`|`) and folded (`>`) blocks with optional `-`/`+` chomping,
+and indented mappings and lists for metadata/hooks. Unsupported forms (flow collections,
+anchors, tags, multiline quotes, explicit block indentation) produce parse errors.
+Scalars remain strings. Unknown fields are compatibility warnings, not evidence of
+cross-platform support. The budget checker fails if any skill cannot be parsed.
+
+Run the parser and analyzer regression examples from the repository root:
+`python3 -m unittest discover -s tests -v`.
 
 ## Creating from Current Session
 

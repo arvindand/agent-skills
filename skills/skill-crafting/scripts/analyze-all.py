@@ -8,69 +8,28 @@ CSO compliance, structure, token efficiency, and cross-platform compatibility.
 
 import sys
 import re
+import importlib.util
 from pathlib import Path
 
-# Import our simple frontmatter parser (no external dependencies)
-try:
-    from frontmatter import parse_frontmatter
-except ImportError:
-    # Inline simple parser if import fails
-    def parse_frontmatter(content):
-        if not content.startswith('---'):
-            return {}, content
-        try:
-            end = content.index('---', 3)
-            yaml_section = content[3:end].strip()
-            body = content[end + 3:].strip()
-        except ValueError:
-            return {}, content
-
-        result = {}
-        for line in yaml_section.split('\n'):
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            if ':' in line:
-                key, _, value = line.partition(':')
-                key = key.strip()
-                value = value.strip().strip('"\'')
-                result[key] = value
-        return result, body
+from frontmatter import parse_frontmatter
 
 
 # ============================================================================
 # CONSTANTS
 # ============================================================================
 
-# Single source of truth: the individual checkers own these rules. Keeping a second
-# copy here silently drifts, so import and fall back only if the modules are missing.
-try:
-    from analyze_cso_rules import WORKFLOW_HINTS  # noqa: F401
-except ImportError:
-    import importlib.util as _ilu
+# The individual checkers own these rules. Missing or broken bundled scripts must
+# fail visibly; substituting a second set of rules silently changes the analysis.
+def _load(mod_name, filename):
+    spec = importlib.util.spec_from_file_location(mod_name, Path(__file__).parent / filename)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
-    def _load(mod_name, filename):
-        spec = _ilu.spec_from_file_location(mod_name, Path(__file__).parent / filename)
-        module = _ilu.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return module
 
-    try:
-        _cso = _load('_cso', 'analyze-cso.py')
-        _compat = _load('_compat', 'analyze-compatibility.py')
-        WORKFLOW_HINTS = _cso.WORKFLOW_HINTS
-        STANDARD_FIELDS = set(_compat.STANDARD_FIELDS)
-        CLAUDE_CODE_FIELDS = set(_compat.CLAUDE_CODE_FIELDS)
-        PER_SKILL_DESC_CAP = _load('_budget', 'check-char-budget.py').PER_SKILL_DESC_CAP
-    except Exception:
-        WORKFLOW_HINTS = [(r'(?<!reusable )\bworkflow\b', 'Uses "workflow"')]
-        STANDARD_FIELDS = {'name', 'description', 'license', 'compatibility',
-                           'metadata', 'allowed-tools'}
-        CLAUDE_CODE_FIELDS = {'when_to_use', 'argument-hint', 'arguments',
-                              'disable-model-invocation', 'user-invocable',
-                              'disallowed-tools', 'model', 'effort', 'context',
-                              'agent', 'background', 'paths', 'shell', 'hooks'}
-        PER_SKILL_DESC_CAP = 1536
+_cso = _load('_cso', 'analyze-cso.py')
+_compat = _load('_compat', 'analyze-compatibility.py')
+WORKFLOW_HINTS = _cso.WORKFLOW_HINTS
 
 
 # ============================================================================
@@ -95,8 +54,11 @@ def load_skill(skill_path: Path) -> dict:
     if not skill_file.exists():
         return {'error': f"SKILL.md not found in {skill_path}"}
 
-    content = skill_file.read_text(encoding='utf-8')
-    frontmatter = _parse_fm(content)
+    try:
+        content = skill_file.read_text(encoding='utf-8')
+        frontmatter = _parse_fm(content)
+    except (ValueError, OSError) as error:
+        return {'error': f"Could not parse {skill_file}: {error}"}
 
     if not frontmatter:
         return {'error': "Could not parse YAML frontmatter"}
@@ -191,23 +153,13 @@ def analyze_cso(skill: dict) -> dict:
 
 def analyze_compatibility(skill: dict) -> dict:
     """Analyze cross-platform compatibility."""
-    results = {
-        'is_cross_platform': True,
-        'standard': [],
-        'claude_code': [],
-        'unknown': [],
+    report = _compat.analyze_compatibility(skill['frontmatter'])
+    return {
+        'is_cross_platform': report['is_cross_platform'],
+        'standard': [item['field'] for item in report['standard_fields']],
+        'claude_code': [item['field'] for item in report['claude_code_fields']],
+        'unknown': report['unknown_fields'],
     }
-
-    for field in skill['frontmatter']:
-        if field in STANDARD_FIELDS:
-            results['standard'].append(field)
-        elif field in CLAUDE_CODE_FIELDS:
-            results['claude_code'].append(field)
-            results['is_cross_platform'] = False
-        else:
-            results['unknown'].append(field)
-
-    return results
 
 
 def estimate_tokens(content: str) -> int:
@@ -248,10 +200,14 @@ def print_analysis(skill: dict, structure: dict, cso: dict, compat: dict):
 
     # Compatibility
     print("\n🌐 PLATFORM COMPATIBILITY")
-    if compat['is_cross_platform']:
+    if compat['unknown']:
+        print("   ⚠️  Compatibility unverified: unknown frontmatter fields")
+        print(f"   ❓ Unknown: {', '.join(compat['unknown'])}")
+    elif compat['is_cross_platform']:
         print("   ✅ Fully cross-platform")
     else:
         print("   ⚠️  Uses Claude Code extensions")
+    if compat['claude_code']:
         print(f"   🔵 Extensions: {', '.join(compat['claude_code'])}")
 
     # Metrics
@@ -262,7 +218,7 @@ def print_analysis(skill: dict, structure: dict, cso: dict, compat: dict):
 
     # Summary
     total_issues = len(structure['issues']) + len(cso['issues'])
-    total_warnings = len(structure['warnings']) + len(cso['warnings'])
+    total_warnings = len(structure['warnings']) + len(cso['warnings']) + len(compat['unknown'])
 
     print(f"\n{'─'*60}")
     if total_issues == 0 and total_warnings == 0:

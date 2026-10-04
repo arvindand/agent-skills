@@ -102,8 +102,11 @@ def analyze_skill_file(filepath: str) -> dict:
     if not path.exists():
         return {'error': f"File not found: {filepath}"}
 
-    content = path.read_text(encoding='utf-8')
-    frontmatter = parse_skill_frontmatter(content)
+    try:
+        content = path.read_text(encoding='utf-8')
+        frontmatter = parse_skill_frontmatter(content)
+    except (ValueError, OSError) as error:
+        return {'error': f"Could not parse {filepath}: {error}"}
 
     if not frontmatter:
         return {'error': "Could not parse YAML frontmatter"}

@@ -9,7 +9,7 @@ versus Claude Code extensions (platform-specific).
 import sys
 from pathlib import Path
 
-from frontmatter import parse_simple_yaml
+from frontmatter import parse_frontmatter as parse_content_frontmatter
 
 
 # Agent Skills spec (agentskills.io) - the six fields accepted by claude.ai skill
@@ -55,13 +55,11 @@ def parse_frontmatter(skill_path: Path) -> dict:
 
     try:
         content = skill_md.read_text(encoding='utf-8')
-        if not content.startswith('---'):
+        data, _ = parse_content_frontmatter(content)
+        if not data:
             return {'error': "Missing YAML frontmatter"}
-
-        end = content.index('---', 3)
-        yaml_content = content[3:end].strip()
-        return parse_simple_yaml(yaml_content)
-    except ValueError as e:
+        return data
+    except (ValueError, OSError) as e:
         return {'error': f"YAML parse error: {e}"}
 
 
@@ -100,6 +98,9 @@ def analyze_compatibility(frontmatter: dict) -> dict:
 
         else:
             result['unknown_fields'].append(field)
+            result['is_cross_platform'] = False
+            result['recommendations'].append(
+                f"Check or remove unknown field: {field}; platform support is unverified")
 
     # Check required fields
     if 'name' not in frontmatter:
@@ -119,10 +120,12 @@ def print_analysis(result: dict, name: str = 'Unknown'):
         return 1
 
     # Cross-platform status
-    if result['is_cross_platform']:
+    if result['unknown_fields']:
+        print("⚠️  Compatibility unverified (unknown frontmatter fields)")
+    elif result['is_cross_platform']:
         print("✅ Fully cross-platform (Agent Skills standard only)")
     else:
-        print("⚠️  Uses Claude Code extensions (gracefully degraded elsewhere)")
+        print("⚠️  Uses Claude Code extensions (spec-only validators reject these fields)")
 
     # Standard fields
     print("\n--- Agent Skills Standard (cross-platform) ---")
@@ -163,7 +166,10 @@ def print_analysis(result: dict, name: str = 'Unknown'):
     ]
 
     for platform, supported in platforms:
-        status = "✅ Full" if supported else "⚠️ Core only"
+        if result['unknown_fields']:
+            status = "❓ Unverified fields"
+        else:
+            status = "✅ Full" if supported else "⚠️ Core only"
         print(f"  {platform:20} {status}")
 
     return 0

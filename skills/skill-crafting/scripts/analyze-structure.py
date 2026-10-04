@@ -9,7 +9,7 @@ import sys
 import re
 from pathlib import Path
 
-from frontmatter import parse_simple_yaml
+from frontmatter import parse_frontmatter
 
 
 def validate_name(name: str) -> list:
@@ -52,27 +52,14 @@ def validate_frontmatter(content: str) -> dict:
         result['issues'].append("File must start with --- (YAML frontmatter)")
         return result
 
-    # Find end of frontmatter
-    try:
-        end_idx = content.index('---', 3)
-    except ValueError:
-        result['issues'].append("Missing closing --- for frontmatter")
-        return result
-
-    yaml_content = content[3:end_idx].strip()
-
-    # Check for tabs (common error)
-    if '\t' in yaml_content:
-        result['issues'].append("YAML contains tabs (use spaces only)")
-
     # Parse YAML
     try:
-        data = parse_simple_yaml(yaml_content)
+        data, _ = parse_frontmatter(content)
         if not data:
             result['issues'].append("Frontmatter must be a YAML mapping")
             return result
         result['data'] = data
-    except Exception as e:
+    except ValueError as e:
         result['issues'].append(f"Invalid YAML: {e}")
         return result
 
