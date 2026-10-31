@@ -1,0 +1,39 @@
+name: Validate skills
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.10', '3.14']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m unittest discover -s tests -v
+      - name: Check every bundled skill
+        run: |
+          for skill in skills/*; do
+            python skills/skill-crafting/scripts/analyze-all.py "$skill" || exit 1
+          done
+          python skills/skill-crafting/scripts/check-char-budget.py skills
+      - name: Check plugin versions and release tag
+        env:
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          plugin = json.loads(Path('.claude-plugin/plugin.json').read_text())
+          marketplace = json.loads(Path('.claude-plugin/marketplace.json').read_text())
+          assert plugin['version'] == marketplace['plugins'][0]['version']
+          if os.environ['RELEASE_TAG']:
+              assert os.environ['RELEASE_TAG'] == 'v' + plugin['version']
+          PY
