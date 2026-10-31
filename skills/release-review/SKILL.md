@@ -2,10 +2,11 @@
 name: release-review
 description: "Assess merge and release readiness for a software repository. Use when the user asks 'can this be merged', 'should we release now', 'what changed since the last release', or requests preparation of a software release."
 license: MIT
-compatibility: "Requires access to the repository and its hosting service for live CI and release status."
 ---
 
 # Release Review
+
+Requires repository and hosting-service access for live CI and release status.
 
 Ground the recommendation in the current repository state and its release conventions.
 
