@@ -25,6 +25,7 @@ budget = load_script('check-char-budget.py')
 compatibility = load_script('analyze-compatibility.py')
 all_checks = load_script('analyze-all.py')
 tokens = load_script('analyze-tokens.py')
+structure = load_script('analyze-structure.py')
 
 
 class FrontmatterTests(unittest.TestCase):
@@ -123,7 +124,7 @@ class FrontmatterTests(unittest.TestCase):
 
     def test_bundled_skills_and_nested_hooks(self):
         paths = list((ROOT / 'skills').glob('*/SKILL.md'))
-        self.assertEqual(len(paths), 5)
+        self.assertGreaterEqual(len(paths), 5)
         for path in paths:
             with self.subTest(skill=path.parent.name):
                 data, body = parse_frontmatter(path.read_text())
@@ -140,7 +141,8 @@ class AnalyzerTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.path = Path(self.temp.name)
+        self.path = Path(self.temp.name) / 'example'
+        self.path.mkdir()
         (self.path / 'LICENSE').write_text('MIT')
 
     def write_skill(self, fields):
@@ -157,6 +159,33 @@ class AnalyzerTests(unittest.TestCase):
         self.assertEqual(report['total'], budget.PER_SKILL_DESC_CAP + 1)
         self.assertEqual(len(report['over_cap']), 1)
         self.assertEqual(self.run_script('check-char-budget.py').returncode, 1)
+
+    def test_names_follow_the_portable_spec(self):
+        for name in ('pdf-processing', '123-tool', 'a', '1'):
+            with self.subTest(name=name):
+                self.assertEqual(structure.validate_name(name), [])
+        for name in ('pdf--processing', 'pdf-', '-pdf', 'PDF', 'pdf_name', 'a' * 65):
+            with self.subTest(name=name):
+                self.assertTrue(structure.validate_name(name))
+
+    def test_both_structure_checks_reject_directory_mismatch(self):
+        self.write_skill('description: Use when checking skills.')
+        path = self.path / 'SKILL.md'
+        path.write_text(path.read_text().replace('name: example', 'name: wrong'))
+        for filename in ('analyze-structure.py', 'analyze-all.py'):
+            with self.subTest(filename=filename):
+                result = self.run_script(filename)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn('must match directory', result.stdout)
+
+    def test_both_structure_checks_reject_empty_descriptions(self):
+        for value in ('""', '"   "'):
+            self.write_skill('description: ' + value)
+            for filename in ('analyze-structure.py', 'analyze-all.py'):
+                with self.subTest(value=value, filename=filename):
+                    result = self.run_script(filename)
+                    self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                    self.assertIn('Description must not be empty', result.stdout)
 
     def test_unparsed_skill_prevents_false_budget_success(self):
         good = self.path / 'good'

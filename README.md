@@ -28,7 +28,7 @@ git clone https://github.com/arvindand/agent-skills.git
 cp -r agent-skills/skills/* ~/.claude/skills/
 ```
 
-Works with Claude Code, GitHub Copilot, OpenCode, Cursor, and VS Code with Copilot.
+The command above installs into Claude Code. For another client, copy each skill folder into that client's documented skills directory. Client-specific hooks and tool names require support from that client; file-format validation alone does not establish runtime compatibility.
 
 ## Available Skills
 
@@ -37,8 +37,21 @@ Works with Claude Code, GitHub Copilot, OpenCode, Cursor, and VS Code with Copil
 | [context7](skills/context7/) | Library documentation lookup via Context7 REST API | Getting up-to-date docs for React, Next.js, Prisma, etc. |
 | [github-navigator](skills/github-navigator/) | GitHub operations via gh CLI with deep analysis mode | All GitHub operations + codebase analysis via cloning |
 | [maven-tools](skills/maven-tools/) | JVM dependency intelligence via [Maven Tools MCP server](https://github.com/arvindand/maven-tools-mcp) | Version checks, POM-aware upgrade planning, JVM dependency bot replacement flows, CVE scanning, license compliance |
+| [release-review](skills/release-review/) | Merge and release readiness with artifact verification | Reviewing a PR, deciding whether to release, and preparing authorized releases |
 | [skill-crafting](skills/skill-crafting/) | Create, fix, validate skills + generate from session history | Creating skills, fixing issues, CSO compliance, session-to-skill conversion |
 | [ui-ux-design](skills/ui-ux-design/) | Create production-grade interfaces with strong UX foundations | Building functional, accessible, visually distinctive UI/UX |
+
+### Compatibility status
+
+| Install / behavior | Validation |
+| --- | --- |
+| Skill frontmatter and bundled Python scripts | Automated CI on Python 3.10 and 3.14 |
+| Claude Code plugin, hooks and output styles | Primary development target; use the plugin installation above |
+| Other Agent Skills clients | Runtime support is unverified; use [manual behavior checks](tests/scenarios.md) before relying on client-specific features |
+
+Script commands using `${CLAUDE_SKILL_DIR}` rely on Claude Code's path expansion.
+On another client, resolve the script path from the installed skill directory.
+The Python scripts themselves use only the standard library.
 
 ## Output Styles
 
@@ -99,6 +112,19 @@ When running in Claude Code, these skills leverage additional features:
 | Tool pre-approval | All | `allowed-tools` skips permission prompts for the invoking turn. It does not restrict anything — every tool stays callable and your permission settings still apply |
 
 Other platforms get core functionality without these enhancements.
+
+## Development
+
+```bash
+python3 -m unittest discover -s tests -v
+for skill in skills/*; do
+  python3 skills/skill-crafting/scripts/analyze-all.py "$skill" || break
+done
+python3 skills/skill-crafting/scripts/check-char-budget.py skills
+```
+
+See [manual behavior checks](tests/scenarios.md) for trigger and decision scenarios.
+Release notes are in [CHANGELOG.md](CHANGELOG.md).
 
 ## Contributing
 

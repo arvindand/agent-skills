@@ -32,8 +32,8 @@ def validate_name(name: str) -> list:
     if ' ' in name:
         issues.append("No spaces allowed in name")
 
-    if not re.match(r'^[a-z][a-z0-9\-]*$', name):
-        issues.append("Name must start with letter, contain only lowercase, numbers, hyphens")
+    if not re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*', name):
+        issues.append("Name must contain lowercase letters, numbers and single hyphens between words")
 
     return issues
 
@@ -77,7 +77,9 @@ def validate_frontmatter(content: str) -> dict:
     # Check description
     if 'description' in data:
         desc = data['description']
-        if len(desc) > 1024:
+        if not desc.strip():
+            result['issues'].append("Description must not be empty")
+        elif len(desc) > 1024:
             result['issues'].append(f"Description too long: {len(desc)} chars (max 1024)")
         elif len(desc) > 500:
             result['warnings'].append(f"Description is {len(desc)} chars (recommend <500)")
@@ -134,6 +136,9 @@ def validate_skill_directory(dirpath: str) -> dict:
     result['issues'].extend(fm_result['issues'])
     result['warnings'].extend(fm_result['warnings'])
     result['structure']['frontmatter'] = fm_result['data']
+    name = fm_result['data'].get('name')
+    if name and name != path.name:
+        result['issues'].append(f"Name '{name}' must match directory '{path.name}'")
 
     # Check for common directories
     scripts_dir = path / 'scripts'

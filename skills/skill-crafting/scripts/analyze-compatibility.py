@@ -16,8 +16,8 @@ from frontmatter import parse_frontmatter as parse_content_frontmatter
 # uploads, the Skills API, and package_skill.py. Anything else fails validation there
 # with "Unexpected key(s) in SKILL.md frontmatter".
 STANDARD_FIELDS = {
-    'name': 'Optional - defaults to directory name; sets the display label',
-    'description': 'Recommended - falls back to first paragraph of the body',
+    'name': 'Required - lowercase letters, digits and single hyphens; matches directory name',
+    'description': 'Required - non-empty, max 1024 chars',
     'license': 'Optional - license name or file reference',
     'compatibility': 'Optional - environment prerequisites, max 500 chars',
     'metadata': 'Optional - free-form map for your own tooling',

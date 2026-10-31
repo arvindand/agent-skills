@@ -29,6 +29,7 @@ def _load(mod_name, filename):
 
 _cso = _load('_cso', 'analyze-cso.py')
 _compat = _load('_compat', 'analyze-compatibility.py')
+_structure = _load('_structure', 'analyze-structure.py')
 WORKFLOW_HINTS = _cso.WORKFLOW_HINTS
 
 
@@ -80,22 +81,13 @@ def load_skill(skill_path: Path) -> dict:
 def analyze_structure(skill: dict) -> dict:
     """Analyze skill structure."""
     results = {'issues': [], 'warnings': [], 'good': []}
-    fm = skill['frontmatter']
-
-    # Required fields
-    if 'name' in fm:
-        name = fm['name']
-        if name == name.lower() and re.match(r'^[a-z][a-z0-9\-]*$', name):
-            results['good'].append("Name follows conventions")
-        else:
-            results['issues'].append("Name must be lowercase with hyphens only")
-        if len(name) > 64:
-            results['issues'].append(f"Name too long: {len(name)} chars (max 64)")
-    else:
-        results['issues'].append("Missing required field: name")
-
-    if 'description' not in fm:
-        results['issues'].append("Missing required field: description")
+    validation = _structure.validate_frontmatter(skill['content'])
+    results['issues'].extend(validation['issues'])
+    name = skill['frontmatter'].get('name')
+    if name and name != Path(skill['path']).name:
+        results['issues'].append(f"Name '{name}' must match directory '{Path(skill['path']).name}'")
+    if not results['issues']:
+        results['good'].append("Frontmatter follows naming and description rules")
 
     # Line count
     if skill['lines'] > 500:

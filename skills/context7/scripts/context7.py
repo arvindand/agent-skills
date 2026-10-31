@@ -24,6 +24,8 @@ from urllib.error import HTTPError, URLError
 
 BASE_URL = "https://context7.com/api/v2"
 API_KEY = os.environ.get("CONTEXT7_API_KEY", "")
+REQUEST_TIMEOUT = 30
+MAX_RESPONSE_BYTES = 2 * 1024 * 1024
 
 
 def make_request(url):
@@ -44,8 +46,11 @@ def make_request(url):
 
     try:
         req = Request(url, headers=headers)
-        with urlopen(req) as response:
-            return response.read().decode("utf-8")
+        with urlopen(req, timeout=REQUEST_TIMEOUT) as response:
+            body = response.read(MAX_RESPONSE_BYTES + 1)
+            if len(body) > MAX_RESPONSE_BYTES:
+                raise ValueError("Context7 response exceeds the 2 MiB limit; narrow the query")
+            return body.decode("utf-8")
     except HTTPError as e:
         print(f"HTTP Error {e.code}: {e.reason}", file=sys.stderr)
         if e.code in (301, 302, 308):
